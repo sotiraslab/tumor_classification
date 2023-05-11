@@ -1,0 +1,74 @@
+Bootstrap: docker
+From: nvidia/cuda:9.0-devel-ubuntu16.04
+
+%post
+  # Install the necessary packages (from repo)
+  apt-get update && apt-get install -y --no-install-recommends \
+      build-essential \
+      cmake \
+      git \
+      unzip \
+      zip \
+      gcc \
+      pylint \
+      curl \
+      wget \
+      tar \
+      openjdk-8-jdk \
+      zlib1g-dev \
+      bash-completion \
+      libcurl4-openssl-dev \
+      libreadline-gplv2-dev \
+      libncursesw5-dev \
+      libssl-dev \
+      libsqlite3-dev \
+      tk-dev \
+      libgdbm-dev \
+      libc6-dev \
+      libbz2-dev \
+      libhdf5-serial-dev \
+      libhdf5-dev \
+      liblzma-dev
+  apt-get clean
+
+  # Install Python 3.6.2
+  cd /usr/src
+  wget https://www.python.org/ftp/python/3.6.2/Python-3.6.2.tar.xz
+  tar xJf Python-3.6.2.tar.xz
+  cd Python-3.6.2
+  ./configure
+  make
+  make install
+
+
+  # Install cuDNN
+  cd /usr/src
+  wget https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1604/x86_64/libcudnn7_7.2.1.38-1+cuda9.0_amd64.deb
+  wget https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1604/x86_64/libcudnn7-dev_7.2.1.38-1+cuda9.0_amd64.deb
+  dpkg -i libcudnn7_7.2.1.38-1+cuda9.0_amd64.deb
+  dpkg -i libcudnn7-dev_7.2.1.38-1+cuda9.0_amd64.deb
+
+  # Install Bazel
+  wget https://github.com/bazelbuild/bazel/releases/download/0.19.0/bazel_0.19.0-linux-x86_64.deb
+  dpkg -i bazel_0.19.0-linux-x86_64.deb
+
+  # Install python packages
+  wget -O get-pip.py https://bootstrap.pypa.io/get-pip.py
+  python3 get-pip.py
+  pip3 install --no-cache-dir --upgrade pip
+  pip3 install --no-cache-dir --upgrade setuptools xgboost
+  pip3 install --no-cache-dir --upgrade keras==2.2.5 pandas matplotlib numpy==1.16.4 scipy
+  pip3 install --no-cache-dir --upgrade tensorflow-gpu==1.12.0
+  pip3 install --no-cache-dir --upgrade nibabel
+  pip3 install --no-cache-dir --upgrade nilearn>=0.3.0
+  pip3 install --no-cache-dir --upgrade tables>=3.4.2
+  pip3 install --no-cache-dir --upgrade nipype SimpleITK
+  pip3 install git+https://www.github.com/farizrahman4u/keras-contrib.git
+
+  # Set up environment
+  echo "export PATH=/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" >> /environment
+  echo "export LD_LIBRARY_PATH=/usr/local/cuda/lib64:/usr/local/cuda/lib64/stubs:/usr/local/cuda/extras/CUPTI/lib64::/.singularity.d/libs" >> /environment
+
+
+  # Clean up
+  rm -rf /usr/src/*
